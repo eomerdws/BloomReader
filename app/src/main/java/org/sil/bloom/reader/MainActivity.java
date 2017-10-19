@@ -88,11 +88,9 @@ public class MainActivity extends BaseActivity
             mListView = (ListView) findViewById(R.id.book_list2);
             SetupCollectionListView(mListView);
 
-            // If we were started by some external process and given a path to a book file,
-            // we want copy it to where Bloom books live if it isn't already there,
-            // make sure it is in our collection,
-            // and then open the reader to view it.
-            importBookIfAttached(getIntent());
+            // If we were started by some external process, we need to process any file
+            // we were given (a book or bundle)
+            processIntentData();
 
             // Insert the build version and date into the appropriate control.
             // We have to find it indirectly through the navView's header or it won't be found
@@ -126,17 +124,34 @@ public class MainActivity extends BaseActivity
         return BloomReaderApplication.theOneBookCollection;
     }
 
-    private void importBookIfAttached(Intent intent){
-        Uri bookUri = getIntent().getData();
-        if(bookUri == null)
+    private void processIntentData() {
+        Uri uri = getIntent().getData();
+        if (uri == null)
             return;
-        String newpath = _bookCollection.ensureBookIsInCollection(this, bookUri);
-        if(newpath != null) {
-            openBook(this, newpath);
-        } else{
+        if (uri.getPath().endsWith(BookOrShelf.BOOK_FILE_EXTENSION)) {
+            importBook(uri);
+        } else if (uri.getPath().endsWith(IOUtilities.BLOOM_BUNDLE_FILE_EXTENSION)) {
+            importBloomBundle(uri);
+        }
+    }
+
+    // If we were given a path to a book file,
+    // we want copy it to where Bloom books live if it isn't already there,
+    // make sure it is in our collection,
+    // and then open the reader to view it.
+    private void importBook(Uri bookUri){
+        String newPath = _bookCollection.ensureBookIsInCollection(this, bookUri);
+        if (newPath != null) {
+            openBook(this, newPath);
+        } else {
             Toast failToast = Toast.makeText(this, R.string.failed_book_import, Toast.LENGTH_LONG);
             failToast.show();
         }
+    }
+
+    private void importBloomBundle(Uri bloomBundleUri) {
+        Toast.makeText(this, "Got Bloom bundle: " + bloomBundleUri.getPath(), Toast.LENGTH_LONG).show();
+        IOUtilities.extractBloomBundle(bloomBundleUri);
     }
 
     @Override
@@ -448,6 +463,10 @@ public class MainActivity extends BaseActivity
             case R.id.nav_share_app:
                 ShareDialogFragment shareDialogFragment = new ShareDialogFragment();
                 shareDialogFragment.show(getFragmentManager(), ShareDialogFragment.SHARE_DIALOG_FRAGMENT_TAG);
+                break;
+            case R.id.nav_share_books:
+                ShareBooksDialogFragment shareBooksDialogFragment = new ShareBooksDialogFragment();
+                shareBooksDialogFragment.show(getFragmentManager(), ShareBooksDialogFragment.SHARE_BOOKS_DIALOG_FRAGMENT_TAG);
                 break;
             case R.id.nav_release_notes:
                 DisplaySimpleResource(getString(R.string.release_notes), R.raw.release_notes);
