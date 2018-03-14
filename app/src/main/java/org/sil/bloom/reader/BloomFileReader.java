@@ -1,6 +1,8 @@
 package org.sil.bloom.reader;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 
@@ -10,6 +12,7 @@ import org.sil.bloom.reader.models.BookCollection;
 import org.sil.bloom.reader.models.BookOrShelf;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class BloomFileReader {
@@ -25,6 +28,7 @@ public class BloomFileReader {
     private static final String THUMBNAIL_NAME_1 = "thumbnail.png";
     private static final String THUMBNAIL_NAME_2 = "thumbnail.jpg";
     private static final String META_JSON_FILE = "meta.json";
+    private static final float ICON_DP = 48.0f;
 
     public BloomFileReader(Context context, String bloomFilePath){
         this.context = context;
@@ -68,8 +72,10 @@ public class BloomFileReader {
             thumb = new File(bookDirectory.getPath() + File.separator + THUMBNAIL_NAME_2);
         if(thumb.exists()){
             String toPath = thumbsDirectory.getPath() + File.separator + bookName;
-            if(IOUtilities.copyFile(thumb.getPath(), toPath));
+            if(IOUtilities.copyFile(thumb.getPath(), toPath)) {
                 thumbUri = Uri.fromFile(new File(toPath));
+                scaleThumbnailForDevice(new File(toPath));
+            }
         }
         else{
             String noThumbPath = thumbsDirectory + File.separator + BookCollection.NO_THUMBS_DIR + File.separator + bookName;
@@ -77,6 +83,26 @@ public class BloomFileReader {
         }
         closeFile();
         return thumbUri;
+    }
+
+    private void scaleThumbnailForDevice(File img) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap bitmap = BitmapFactory.decodeFile(img.getAbsolutePath(), options);
+
+            if (bitmap.getWidth() >= 256) {  // Default bloomd thumbnail size
+                Bitmap resized = Bitmap.createScaledBitmap(bitmap, (int) ICON_DP * (int)scale, (int) ICON_DP * (int)scale , true);
+                FileOutputStream out;
+
+                out = new FileOutputStream(img);
+                resized.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public String bookNameIfValid() {
