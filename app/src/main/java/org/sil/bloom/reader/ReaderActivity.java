@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.constraint.ConstraintSet;
@@ -107,9 +108,9 @@ public class ReaderActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true);
-        //}
+        }
 
         setContentView(R.layout.activity_reader);
 //        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -523,10 +524,14 @@ public class ReaderActivity extends BaseActivity {
         // Selects the first (and presumably only) video on the page if any exists
         String videoSelector = "document.getElementsByTagName('video')[0]";
 
-        if(oldView != null)
-            oldView.evaluateJavascript(videoSelector + ".pause();", null);
-        if(currentView != null)
-            currentView.evaluateJavascript(videoSelector + ".play();", null);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if (oldView != null)
+                oldView.evaluateJavascript(videoSelector + ".pause();", null);
+            if (currentView != null)
+                currentView.evaluateJavascript(videoSelector + ".play();", null);
+        } else {
+            // TODO: Fix this for Android Version < 4.4
+        }
     }
 
     private void AddPage(ArrayList<String> pages, String pageContent) {
@@ -849,7 +854,8 @@ public class ReaderActivity extends BaseActivity {
             if(mRTLBook)
                 setRotationY(180);
             getSettings().setJavaScriptEnabled(true);
-            getSettings().setMediaPlaybackRequiresUserGesture(false);
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+                getSettings().setMediaPlaybackRequiresUserGesture(false);
         }
 
         @Override

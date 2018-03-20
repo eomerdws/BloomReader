@@ -37,8 +37,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.sil.bloom.reader.WiFi.GetFromWiFiActivity;
-import org.sil.bloom.reader.models.BookOrShelf;
 import org.sil.bloom.reader.models.BookCollection;
+import org.sil.bloom.reader.models.BookOrShelf;
 import org.sil.bloom.reader.models.ExtStorageUnavailableException;
 
 import java.io.File;
@@ -569,6 +569,10 @@ public class MainActivity extends BaseActivity
                 break;
             case R.id.nav_release_notes:
                 DisplaySimpleResource(getString(R.string.release_notes), R.raw.release_notes);
+                break;
+            case R.id.nav_search_for_bundles:
+                FileBrowserDialogFragment fbd = new FileBrowserDialogFragment();
+                fbd.show(getFragmentManager(), FileBrowserDialogFragment.SEARCH_BUNDLES_DIALOG_FRAGMENT_TAG);
                 break;
             case R.id.about_reader:
                 DisplaySimpleResource(getString(R.string.about_bloom_reader), R.raw.about_reader);
