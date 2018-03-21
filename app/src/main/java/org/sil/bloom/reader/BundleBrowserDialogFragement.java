@@ -141,7 +141,7 @@ public class BundleBrowserDialogFragement extends DialogFragment {
     public void noBundlesFound() {
         changeTitle("Sorry no bundles found.");
     }
-    
+
 
     private void changeTitle(String text) {
         txtTitle.setText(text);

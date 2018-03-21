@@ -49,16 +49,18 @@ public class FindBundlesRecursively {
     }
 
     public void startScan(String root) {
-        if(!_locked) {
-            _locked = true;
-            scan(root);
-            _locked = false;
+        if(root != null) {
+            startScan(new File(root));
         }
     }
 
 
     public void startScan(File root) {
         if(!_locked) {
+            if(files.size() > 0) {
+                files.clear(); // Because it is a singleton then the last search results will need to be cleared.
+            }
+
             _locked = true;
             scan(root);
             _locked = false;
