@@ -111,20 +111,8 @@
                      implementation that can't cope with finding a . early in
                      the path unless it's explicitly matched.
                 -->
-                <data android:pathPattern=".*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.bloombundle" />
+                <data android:pathPattern="/.*\\.bloomd" />
+                <data android:pathPattern="/.*\\.bloombundle" />
             </intent-filter>
 
             <!--
@@ -154,20 +142,8 @@
                      implementation that can't cope with finding a . early in
                      the path unless it's explicitly matched.
                 -->
-                <data android:pathPattern=".*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.bloomd" />
-                <data android:pathPattern=".*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.bloombundle" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.bloombundle" />
+                <data android:pathPattern="/.*\\.bloomd" />
+                <data android:pathPattern="/.*\\.bloombundle" />
             </intent-filter>
         </activity>
         <activity
