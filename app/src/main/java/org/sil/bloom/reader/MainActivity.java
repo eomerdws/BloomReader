@@ -571,8 +571,8 @@ public class MainActivity extends BaseActivity
                 DisplaySimpleResource(getString(R.string.release_notes), R.raw.release_notes);
                 break;
             case R.id.nav_search_for_bundles:
-                FileBrowserDialogFragment fbd = new FileBrowserDialogFragment();
-                fbd.show(getFragmentManager(), FileBrowserDialogFragment.SEARCH_BUNDLES_DIALOG_FRAGMENT_TAG);
+                BundleBrowserDialogFragement fbd = new BundleBrowserDialogFragement();
+                fbd.show(getFragmentManager(), BundleBrowserDialogFragement.SEARCH_BUNDLES_DIALOG_FRAGMENT_TAG);
                 break;
             case R.id.about_reader:
                 DisplaySimpleResource(getString(R.string.about_bloom_reader), R.raw.about_reader);

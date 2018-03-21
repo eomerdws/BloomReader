@@ -10,7 +10,7 @@
 
     <LinearLayout
         android:id="@+id/insideView"
-        android:layout_width="match_parent"
+        android:layout_width="400dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="4dp">
@@ -20,6 +20,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Search for Bloom Bundles"/>
+
+        <ProgressBar
+            android:id="@+id/progressLoadBundles"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:visibility="visible"/>
 
         <ListView
             android:id="@+id/listFiles"
