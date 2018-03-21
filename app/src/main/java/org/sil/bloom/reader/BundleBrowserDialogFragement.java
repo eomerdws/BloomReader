@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -50,7 +51,7 @@ public class BundleBrowserDialogFragement extends DialogFragment {
         protected void onPostExecute(Void aVoid) {
             stopProgressBar();
             if(files.size() > 0)
-                listFiles.setAdapter(new ArrayAdapter<File>(getView().getContext(), android.R.layout.simple_list_item_1, files));
+                listFiles.setAdapter(new BundleAdapter(getView().getContext(), R.layout.dialog_search_item, files));
             else
                 noBundlesFound();
         }
@@ -81,19 +82,20 @@ public class BundleBrowserDialogFragement extends DialogFragment {
         @NonNull
         @Override
         public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            View view = convertView;
-            if(view == null) {
-                LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = layoutInflater.inflate(R.layout.dialog_share_books, null);
-            }
 
-            bloomBundleIcon = view.getResources().getDrawable(R.drawable.bookshelf);
+            LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View view = layoutInflater.inflate(R.layout.dialog_search_item, null);
+
             File f = files.get(position);
-            TextView title = (TextView) view.findViewById(R.id.listFiles);
+            TextView title = (TextView) view.findViewById(R.id.textBundleName);
+            ImageView bundleIcon = (ImageView) view.findViewById(R.id.bundleIcon);
+            bundleIcon.setImageResource(R.drawable.bookshelf);
             title.setText(f.getName());
 
             return view;
         }
+
+
     }
 
     @Override
@@ -108,9 +110,10 @@ public class BundleBrowserDialogFragement extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_search_bundles, container, false);
-        listAdapter = new ArrayAdapter<File>(view.getContext(), android.R.layout.simple_list_item_1, files);
+        listAdapter = new BundleAdapter(view.getContext(), R.layout.dialog_search_item, files);
+        listAdapter.setNotifyOnChange(true);
 
-        listFiles = (ListView) view.findViewById(R.id.listFiles);
+        listFiles = view.findViewById(R.id.listFiles);
         listFiles.setAdapter(listAdapter);
         txtTitle = (TextView) view.findViewById(R.id.txtTitle);
         btnCancel = (Button) view.findViewById(R.id.btnCancel);
@@ -138,6 +141,7 @@ public class BundleBrowserDialogFragement extends DialogFragment {
     public void noBundlesFound() {
         changeTitle("Sorry no bundles found.");
     }
+    
 
     private void changeTitle(String text) {
         txtTitle.setText(text);
