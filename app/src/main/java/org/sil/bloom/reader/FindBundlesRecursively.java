@@ -14,7 +14,7 @@ public class FindBundlesRecursively {
     private String root;
 
     public static FindBundlesRecursively getInstance() {
-        if(instance == null) {
+        if (instance == null) {
             instance = new FindBundlesRecursively();
         }
         return instance;
@@ -26,7 +26,7 @@ public class FindBundlesRecursively {
     }
 
     private void scan(File root) {
-        if(root != null) {
+        if (root != null) {
             File[] list = root.listFiles();
 
             for (File f : list) {
@@ -42,25 +42,21 @@ public class FindBundlesRecursively {
     }
 
     private void scan(String root) {
-        if(root !=null) {
+        if (root != null) {
             File f = new File(root);
             this.scan(f);
         }
     }
 
     public void startScan(String root) {
-        if(root != null) {
+        if (root != null) {
             startScan(new File(root));
         }
     }
 
 
     public void startScan(File root) {
-        if(!_locked) {
-            if(files.size() > 0) {
-                files.clear(); // Because it is a singleton then the last search results will need to be cleared.
-            }
-
+        if (!_locked && files.size() < 1) {
             _locked = true;
             scan(root);
             _locked = false;
@@ -73,5 +69,22 @@ public class FindBundlesRecursively {
 
     public ArrayList<File> getFiles() {
         return files;
+    }
+
+    public void clearFiles() {
+        files.clear();
+    }
+
+    public boolean isFilled() {
+        return files.size() > 0;
+    }
+
+    public File getFileByFileName(String name) {
+        for(File file : files) {
+            if(file.getName().toLowerCase().contains(name.toLowerCase()))
+                return file;
+        }
+
+        return null;
     }
 }
