@@ -21,7 +21,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.sil.bloom.reader.Listeners.OnBooksChangeListener;
 import org.sil.bloom.reader.models.BookCollection;
 
 import java.io.File;
@@ -34,16 +36,15 @@ public class BundleBrowserDialogFragement extends DialogFragment {
     public static final String SEARCH_BUNDLES_DIALOG_FRAGMENT_TAG = "search_bundles_dialog";
 
     private String mCurrentPath = Environment.getExternalStorageDirectory().getPath(); // Default
-    private final String FILTER = ".bloombundle";
+    private final String FILTER = IOUtilities.BLOOM_BUNDLE_FILE_EXTENSION;
     private List<File> mFiles = Collections.synchronizedList(new ArrayList<File>());
     private ListView mListFiles;
     private TextView mTxtTitle;
     private Button mBtnCancel;
-    private Drawable mFolderIcon;
     private Drawable mBloomBundleIcon;
     private FindBundlesRecursively mBundles = FindBundlesRecursively.getInstance();
     private ArrayAdapter<File> mListAdapter;
-
+    private OnBooksChangeListener booksChangeListener;
 
     private class BuildBundleListTask extends AsyncTask<Void, Void, Void> {
         @Override
@@ -108,12 +109,9 @@ public class BundleBrowserDialogFragement extends DialogFragment {
             bundleIcon.setImageResource(R.drawable.bookshelf);
             textBundleName.setText(f.getName());
             textBundleName.setOnClickListener(listener);
-            bundleIcon.setOnClickListener(listener);
 
             return view;
         }
-
-
     }
 
     @Override
@@ -137,9 +135,6 @@ public class BundleBrowserDialogFragement extends DialogFragment {
         mTxtTitle = (TextView) view.findViewById(R.id.txtTitle);
         mBtnCancel = (Button) view.findViewById(R.id.btnCancel);
 
-        mFolderIcon = view.getResources().getDrawable(R.drawable.ic_folder);
-
-
         mBtnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -152,9 +147,13 @@ public class BundleBrowserDialogFragement extends DialogFragment {
         return view;
     }
 
+    public void setBooksChangeListener(OnBooksChangeListener listener) {
+        booksChangeListener = listener;
+    }
+
     @Override
     public void onDestroyView() {
-        //https://stackoverflow.com/a/15444485/485386
+        // https://stackoverflow.com/a/15444485/485386
         Dialog dialog = getDialog();
         if (dialog != null && getRetainInstance()) {
             dialog.setDismissMessage(null);
@@ -167,9 +166,18 @@ public class BundleBrowserDialogFragement extends DialogFragment {
         progressLoadBundles.setVisibility(View.INVISIBLE);
     }
 
+    public void processing(String name) {
+        ListView lv = (ListView) getView().findViewById(R.id.listFiles);
+        lv.setVisibility(View.INVISIBLE);
+
+        ProgressBar progressLoadBundles = (ProgressBar) getView().findViewById(R.id.progressLoadBundles);
+        progressLoadBundles.setVisibility(View.VISIBLE);
+        changeTitle("Installing " + name);
+    }
+
     public void noBundlesFound() {
-        changeTitle("Sorry no mBundles found.");
-        mTxtTitle.setTextSize(32);
+        changeTitle("Sorry no bundles found.");
+        mTxtTitle.setTextSize(20);
     }
 
 
@@ -182,7 +190,8 @@ public class BundleBrowserDialogFragement extends DialogFragment {
     }
 
     private void importBloomBundle(Uri bloomBundleUri) {
-        // Toast.makeText(getView(), "Got Bloom bundle: " + bloomBundleUri.getPath(), Toast.LENGTH_LONG).show();
+        Context context = getView().getContext().getApplicationContext();
+        Toast.makeText(context, "Got Bloom bundle: " + bloomBundleUri.getPath(), Toast.LENGTH_LONG).show();
         List<String> newBooks = null;
         try {
             newBooks = IOUtilities.extractBloomBundle(getView().getContext().getApplicationContext(), bloomBundleUri);
@@ -191,13 +200,17 @@ public class BundleBrowserDialogFragement extends DialogFragment {
             // around the room).
             if(!IOUtilities.seemToBeDifferentVolumes(bloomBundleUri.getPath(), BookCollection.getLocalBooksDirectory().getPath())) {
                 (new File(bloomBundleUri.getPath())).delete();
+                if(booksChangeListener != null)
+                    booksChangeListener.onChange(newBooks);
             }
         }
         catch (IOException e) {
             Log.e("BundleIO", "IO exception reading bloom bundle: " + e.getMessage());
             e.printStackTrace();
-            // Toast.makeText(this, "Had a problem reading the bundle", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Had a problem reading the bundle", Toast.LENGTH_LONG).show();
         }
+
+
         // try {
         //     // Reinitialize completely to get the new state of things.
         //     _bookCollection.init(this.getApplicationContext());

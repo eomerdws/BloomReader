@@ -36,6 +36,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.sil.bloom.reader.Listeners.OnBooksChangeListener;
 import org.sil.bloom.reader.WiFi.GetFromWiFiActivity;
 import org.sil.bloom.reader.models.BookCollection;
 import org.sil.bloom.reader.models.BookOrShelf;
@@ -56,6 +57,7 @@ public class MainActivity extends BaseActivity
     public android.view.ActionMode contextualActionBarMode;
     private static boolean sSkipNextNewFileSound;
     ArrayAdapter mListAdapter;
+    private OnBooksChangeListener onBooksChangeListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +115,14 @@ public class MainActivity extends BaseActivity
         catch(ExtStorageUnavailableException e){
             externalStorageUnavailable(e);
         }
+
+        onBooksChangeListener = new OnBooksChangeListener() {
+            @Override
+            public void onChange(List<String> newBooks) {
+                updateDisplay();
+                highlightItems(newBooks);
+            }
+        };
 
         // Cleans up old-style thumbnails - could be removed someday after it's run on most devices with old-style thumbnails
         BookCollection.cleanUpOldThumbs(this);
@@ -178,8 +188,7 @@ public class MainActivity extends BaseActivity
         } catch (ExtStorageUnavailableException e) {
             Log.wtf("BloomReader", "Could not use external storage when reloading project!", e); // should NEVER happen
         }
-        updateDisplay();
-        highlightItems(newBooks);
+        onBooksChangeListener.onChange(newBooks);
     }
 
     @Override
@@ -572,6 +581,7 @@ public class MainActivity extends BaseActivity
                 break;
             case R.id.nav_search_for_bundles:
                 BundleBrowserDialogFragement fbd = new BundleBrowserDialogFragement();
+                fbd.setBooksChangeListener(onBooksChangeListener);
                 fbd.show(getFragmentManager(), BundleBrowserDialogFragement.SEARCH_BUNDLES_DIALOG_FRAGMENT_TAG);
                 break;
             case R.id.about_reader:
