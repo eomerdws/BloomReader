@@ -1,13 +1,12 @@
 package org.sil.bloom.reader;
 
 import android.media.MediaPlayer;
-import android.media.SoundPool;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 
 import static android.media.AudioManager.STREAM_MUSIC;
@@ -72,10 +71,17 @@ public class WebAppInterface {
         mPosition = position;
     }
 
+    public void reset(){
+        mDocLoaded = false;
+        shouldPrepareDocumentWhenLoaded = false;
+        shouldStartNarrationWhenDocLoaded = false;
+    }
+
     // Mainly this is to prevent the Paused state from persisting from one book to another
     public static void resetAll(){
         mPaused = false;
         mp = new MediaPlayer();
+        mpBackground = new MediaPlayer();
     }
 
     // This can be helpful in debugging. It's not currently used in production.
@@ -87,22 +93,26 @@ public class WebAppInterface {
     public void setPaused(boolean pause) {
         mPaused = pause;
         if (pause) {
+            Log.d("JSEvent", "mp.pause && mpBackground.pause");
             mp.pause();
             mpBackground.pause();
 
             mContext.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.d("JSEvent", "pauseAnimation, page " + String.valueOf(mPosition));
                     mWebView.evaluateJavascript("Root.pauseAnimation()", null);
                 }
             });
         } else {
+            Log.d("JSEvent", "mp.start && mpBackground.start, page " + String.valueOf(mPosition));
             mp.start(); // Review: need to suppress if playback completed?
-            if (backgroundAudioPath.length() > 0)
+            if (backgroundAudioPath != null && backgroundAudioPath.length() > 0)
                 mpBackground.start();
             mContext.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.d("JSEvent", "resumeAnimation, page " + String.valueOf(mPosition));
                     mWebView.evaluateJavascript("Root.resumeAnimation()", null);
                 }
             });
@@ -114,12 +124,14 @@ public class WebAppInterface {
     }
 
     public static void stopNarration() {
+        Log.d("JSEvent", "mp.stop");
         mp.stop();
     }
 
     // When our app no longer in foreground
     public static void stopAllAudio() {
         stopNarration();
+        Log.d("JSEvent", "mpBackground.stop");
         mpBackground.stop();
     }
 
@@ -127,6 +139,7 @@ public class WebAppInterface {
         if (path.equals(backgroundAudioPath))
             return;
         backgroundAudioPath = path;
+        Log.d("JSEvent", "mpBackground stop && resest");
         mpBackground.stop();
         mpBackground.reset();
         if (backgroundAudioPath == null || backgroundAudioPath.length() == 0)
@@ -145,15 +158,39 @@ public class WebAppInterface {
         }
     }
 
+    // Return true if the necessary file exists so that playAudio with the same argument will
+    // actually play something. The argument comes from the JavaScript function
+    // and is a path relative to the location of the HTML file.
+    @JavascriptInterface
+    public boolean audioExists(String aud) {
+        String dataSource = mHtmlDirPath + "/" + aud;
+        return new File(dataSource).exists();
+    }
+
     // Play an audio file from the webpage. The argument comes from the JavaScript function
     // and is a path relative to the location of the HTML file.
     @JavascriptInterface
     public void playAudio(String aud) {
 
         try {
+            Log.d("JSEvent", "mp.stop && mp.reset && mp.setDataSource && mp.prepare, page " + String.valueOf(mPosition));
             mp.stop();
             mp.reset();
-            mp.setDataSource(mHtmlDirPath + "/" + aud);
+            String dataSource = mHtmlDirPath + "/" + aud;
+            if (!new File(dataSource).exists()) {
+                // Usually we expect audioExists() to be called and this function NOT to be called
+                // if the audio doesn't exist. But in case it is, it MIGHT be helpful to the client
+                // to indicate immediately that the audio is done, at least in the sense that
+                // there is nothing yet to happen in connection with this play attempt.
+                mContext.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d("JSEvent", "fake playback completed for missing audio, page " + String.valueOf(mPosition));
+                        mWebView.evaluateJavascript("Root.playbackCompleted()", null);
+                    }
+                });
+            }
+            mp.setDataSource(dataSource);
             mp.prepare();
             mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
@@ -166,6 +203,7 @@ public class WebAppInterface {
                                 // completion events.
                                 return;
                             }
+                            Log.d("JSEvent", "playbackCompleted, page " + String.valueOf(mPosition));
                             mWebView.evaluateJavascript("Root.playbackCompleted()", null);
                         }
                     });
@@ -177,6 +215,7 @@ public class WebAppInterface {
             // By not actually starting it, we are in the right state so that it WILL
             // start when the pause ends.
             if (!mPaused) {
+                Log.d("JSEvent", "mp.start, page " + String.valueOf(mPosition));
                 mp.start();
             }
         } catch (IllegalArgumentException e) {
@@ -194,7 +233,7 @@ public class WebAppInterface {
     // at once in response to startNarration() if the page has no audio.
     @JavascriptInterface
     public void pageCompleted() {
-        Log.d("pageCompletedXYX", "got complete notification for page " + mPosition);
+        Log.d("JSEvent", "pageCompleted " + mPosition);
         mContext.pageAudioCompleted();
     }
 
@@ -205,6 +244,7 @@ public class WebAppInterface {
     // JavaScript must call this method at an appropriate point.
     @JavascriptInterface
     public void domContentLoaded() {
+        Log.d("JSEvent", "domContentLoaded, page " + String.valueOf(mPosition));
         boolean shouldStart;
         boolean shouldPrepare;
         synchronized (this) {
@@ -240,10 +280,15 @@ public class WebAppInterface {
         }
     }
 
+    public void enableAnimation(boolean animate) {
+        mWebView.evaluateJavascript("Root.enableAnimation(" +(animate? "true" : "false") + ")", null);
+    }
+
     private void startNarration() {
         mContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.d("JSEvent", "startNarration, page " + String.valueOf(mPosition));
                 mWebView.evaluateJavascript("Root.startNarration()", null);
             }
         });
@@ -267,6 +312,7 @@ public class WebAppInterface {
         mContext.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                Log.d("JSEvent", "handlePageBeforeVisible, page " + String.valueOf(mPosition));
                 mWebView.evaluateJavascript("Root.handlePageBeforeVisible()", null);
             }
         });
